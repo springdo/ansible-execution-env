@@ -5,7 +5,18 @@ build_arg_defaults:
 
 images:
   base_image:
-    name: ghcr.io/ansible/community-ansible-dev-tools:v24.12.0
+    # name: ghcr.io/ansible/community-ansible-dev-tools:v24.12.0
+    # name: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel8:latest
+    name: registry.redhat.io/ansible-automation-platform-24/ee-supported-rhel9:latest
+
+additional_build_steps:
+  prepend_base:
+    - RUN echo "hello world 🗺️"
+  prepend_galaxy:
+    - RUN echo "hello galaxy 🌌"
+    # todo might need something like this for custom repos for galaxy 
+    # - COPY _build/configs/ansible.cfg /etc/ansible/ansible.cfg
+
 dependencies:
   ansible_core:
     package_pip: ansible-core
@@ -17,16 +28,17 @@ dependencies:
       - name: amazon.aws 
       - name: ansible.netcommon
       - name: ansible.posix
-      - name: ansible.builtin
+      # - name: ansible.builtin
       - name: community.vmware
       - name: community.zabbix
       - name: community.windows
       # - name: redhatinsights.insights
   system:
     - net-tools
-    - curl
   python:
     - pandas
+
 options:
+  package_manager_path: /usr/bin/microdnf # needed for rhel images
   tags:
     - latest
