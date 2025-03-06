@@ -13,11 +13,11 @@ dependencies:
     package_pip: ansible-runner
   galaxy:
     collections:
-      - name: ansible.aws
-      - name: ansible.network
+      # - name: ansible.aws
+      # - name: ansible.network
       - name: community.vmware
-      - name: ansible.windows
-      - name: redhatinsights.insights
+      # - name: ansible.windows
+      # - name: redhatinsights.insights
   system:
     - net-tools
     - curl
