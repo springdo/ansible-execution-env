@@ -23,10 +23,6 @@ spec:
       description: Name of the execution environment definition file
       type: string
       default: "execution-environment.yml"
-    - name: context-dir
-      description: Directory to store the execution environment context
-      type: string
-      default: "context"
     - name: image-tag
       description: Tag of the image to build
       type: string
@@ -39,14 +35,6 @@ spec:
       description: Namespace in the registry to push the image to
       type: string
       default: "your-org"
-    - name: build-args
-      description: Additional arguments for the build
-      type: string
-      default: ""
-    - name: destination-namespace
-      description: OpenShift namespace to tag the image to for internal use
-      type: string
-      default: ""
     - name: is-dev-build
       description: If true, build for internal use. If false, push to external registry
       type: string
@@ -81,8 +69,6 @@ spec:
           value: $(params.ee-dir)
         - name: ee-config
           value: $(params.ee-config)
-        - name: context-dir
-          value: $(params.context-dir)
     
     - name: build-and-push
       taskRef:
@@ -93,8 +79,6 @@ spec:
         - name: source
           workspace: shared-workspace
       params:
-        - name: context-dir
-          value: $(params.context-dir)
         - name: image-name
           value: $(params.ee-dir)
         - name: image-tag
@@ -103,10 +87,6 @@ spec:
           value: $(params.registry)
         - name: image-namespace
           value: $(params.image-namespace)
-        - name: build-args
-          value: $(params.build-args)
-        - name: destination-namespace
-          value: $(params.destination-namespace)
         - name: is-dev-build
           value: $(params.is-dev-build)
         - name: quay-push-secret

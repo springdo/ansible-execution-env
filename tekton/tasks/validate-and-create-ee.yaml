@@ -12,10 +12,6 @@ spec:
       description: Name of the execution environment definition file
       type: string
       default: "execution-environment.yml"
-    - name: context-dir
-      description: Directory to store the execution environment context
-      type: string
-      default: "context"
   workspaces:
     - name: source
       description: The workspace containing the EE definition and where context will be created
@@ -45,10 +41,7 @@ spec:
       script: |
         #!/bin/bash
         set -e
-        
-        # Create the context directory if it doesn't exist
-        # mkdir -p $(workspaces.source.path)/$(params.context-dir)
-        
+                
         echo "Creating execution environment context for $(params.ee-dir)..."
         ansible-builder create -f $(params.ee-config) --output-filename=Dockerfile
         ls context        
