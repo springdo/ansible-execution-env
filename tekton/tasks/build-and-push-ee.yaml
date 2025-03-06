@@ -1,0 +1,75 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-and-push-ee
+spec:
+  params:
+    - name: context-dir
+      description: Directory containing the execution environment context
+      type: string
+      default: "context"
+    - name: ee-dir
+      description: Directory containing the execution environment definition
+      type: string
+      default: "example"
+    - name: image-tag
+      description: Tag of the image to build
+      type: string
+      default: "latest"
+    - name: registry
+      description: Registry to push the image to
+      type: string
+      default: "quay.io"
+    - name: image-namespace
+      description: Namespace in the registry to push the image to
+      type: string
+      default: "mickey-mouse"
+    - name: is-dev-build
+      description: If true, build for internal use. If false, push to external registry
+      type: string
+      default: "true"
+    - name: quay-push-secret
+      description: Name of the secret for pushing to the registry
+      type: string
+      default: "quay-push-secret"
+  workspaces:
+    - name: source
+      description: The workspace containing the EE context
+  steps:
+    
+    - name: build-and-push
+      image: image-registry.openshift-image-registry.svc:5000/openshift/cli:latest
+      workingDir: $(workspaces.source.path)/source/$(params.ee-dir)
+      script: |
+        #!/bin/bash
+        set -e
+        
+        # Set variables 
+        PACKAGE=$(params.context-dir)
+        APP_NAME=$(params.ee-dir)
+        VERSION=$(params.image-tag)
+        IMAGE_REPOSITORY=$(params.registry)
+        IMAGE_NAMESPACE=$(params.image-namespace)
+        QUAY_PUSH_SECRET=$(params.quay-push-secret)
+        DEV_BUILD=true
+
+        echo "Clean-up existing stuff"
+        oc delete bc/${APP_NAME} is/${APP_NAME} || rc=$?
+
+
+        # Create OpenShift BuildConfig and start the build
+        if [ "${DEV_BUILD}" == "true" ]; then
+          echo "🏗 Creating a sandbox build for inside the cluster 🏗"
+          oc new-build --binary --name=${APP_NAME} -l app=${APP_NAME} --strategy=docker
+          oc start-build ${APP_NAME} --from-dir=${PACKAGE} --follow --wait
+        else
+          echo "🏗 Creating a build to push to external registry 🏗"
+          oc new-build --binary --name=${APP_NAME} -l app=${APP_NAME} \
+                       --strategy=docker \
+                       --push-secret=${QUAY_PUSH_SECRET} \
+                       --to-docker \
+                       --to="${IMAGE_REPOSITORY}/${IMAGE_NAMESPACE}/${APP_NAME}:${VERSION}"
+          oc start-build ${APP_NAME} --from-dir=${PACKAGE} --follow --wait
+        fi
+        
+        echo "Build and push complete!"

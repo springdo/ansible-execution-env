@@ -1,0 +1,113 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: ansible-ee-pipeline
+spec:
+  workspaces:
+    - name: shared-workspace
+      description: Workspace for source code and build artifacts
+  params:
+    - name: git-url
+      description: Git repository URL to clone
+      type: string
+      default: "https://github.com/springdo/ansible-execution-env.git"
+    - name: git-revision
+      description: Git revision to checkout (branch, tag, sha, ref…)
+      type: string
+      default: "main"
+    - name: ee-dir
+      description: Directory containing the execution environment definition
+      type: string
+      default: "example"
+    - name: ee-config
+      description: Name of the execution environment definition file
+      type: string
+      default: "execution-environment.yml"
+    - name: context-dir
+      description: Directory to store the execution environment context
+      type: string
+      default: "context"
+    - name: image-tag
+      description: Tag of the image to build
+      type: string
+      default: "latest"
+    - name: registry
+      description: Registry to push the image to
+      type: string
+      default: "quay.io"
+    - name: image-namespace
+      description: Namespace in the registry to push the image to
+      type: string
+      default: "your-org"
+    - name: build-args
+      description: Additional arguments for the build
+      type: string
+      default: ""
+    - name: destination-namespace
+      description: OpenShift namespace to tag the image to for internal use
+      type: string
+      default: ""
+    - name: is-dev-build
+      description: If true, build for internal use. If false, push to external registry
+      type: string
+      default: "false"
+    - name: quay-push-secret
+      description: Name of the secret for pushing to the registry
+      type: string
+      default: "quay-push-secret"
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.git-revision)
+
+    - name: validate-and-create
+      taskRef:
+        name: validate-and-create-ee
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: ee-dir
+          value: $(params.ee-dir)
+        - name: ee-config
+          value: $(params.ee-config)
+        - name: context-dir
+          value: $(params.context-dir)
+    
+    - name: build-and-push
+      taskRef:
+        name: build-and-push-ee
+      runAfter:
+        - validate-and-create
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+      params:
+        - name: context-dir
+          value: $(params.context-dir)
+        - name: image-name
+          value: $(params.ee-dir)
+        - name: image-tag
+          value: $(params.image-tag)
+        - name: registry
+          value: $(params.registry)
+        - name: image-namespace
+          value: $(params.image-namespace)
+        - name: build-args
+          value: $(params.build-args)
+        - name: destination-namespace
+          value: $(params.destination-namespace)
+        - name: is-dev-build
+          value: $(params.is-dev-build)
+        - name: quay-push-secret
+          value: $(params.quay-push-secret)

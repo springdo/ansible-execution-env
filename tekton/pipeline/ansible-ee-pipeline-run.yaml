@@ -1,0 +1,36 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: ansible-ee-pipeline-run
+spec:
+  pipelineRef:
+    name: ansible-ee-pipeline
+  workspaces:
+    - name: shared-workspace
+      persistentVolumeClaim:
+        claimName: ansible-ee-workspace-pvc
+  params:
+    - name: git-url
+      value: "https://github.com/springdo/ansible-execution-env.git"
+    - name: git-revision
+      value: "main"
+    - name: ee-dir
+      value: "example"  # This will be both the directory name and the image name
+    - name: ee-config
+      value: "execution-environment.yml"
+    - name: context-dir
+      value: "context"
+    - name: image-tag
+      value: "latest"
+    - name: registry
+      value: "quay.io"
+    - name: image-namespace
+      value: "your-org"  # Replace with your organization namespace
+    - name: build-args
+      value: ""
+    - name: destination-namespace
+      value: "ansible-ee-dev"  # Replace with your target namespace for dev builds
+    - name: is-dev-build
+      value: "false"  # Set to "true" for internal builds, "false" for external registry push
+    - name: quay-push-secret
+      value: "quay-push-secret"  # Replace with your registry secret name

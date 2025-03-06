@@ -1,0 +1,55 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: validate-and-create-ee
+spec:
+  params:
+    - name: ee-dir
+      description: Directory containing the execution environment definition
+      type: string
+      default: "example"
+    - name: ee-config
+      description: Name of the execution environment definition file
+      type: string
+      default: "execution-environment.yml"
+    - name: context-dir
+      description: Directory to store the execution environment context
+      type: string
+      default: "context"
+  workspaces:
+    - name: source
+      description: The workspace containing the EE definition and where context will be created
+  steps:
+    - name: validate-schema
+      image: ghcr.io/ansible/community-ansible-dev-tools:v24.12.0
+      workingDir: $(workspaces.source.path)/source/$(params.ee-dir)
+      script: |
+        #!/bin/bash
+        set -e
+        pwd
+        whoami
+        ls 
+        echo "Validating execution environment definition schema for $(params.ee-dir)..."
+        ansible-lint .
+
+        if [ $? -eq 0 ]; then
+          echo "Schema validation successful!"
+        else
+          echo "Schema validation failed!"
+          exit 1
+        fi
+    
+    - name: create-context
+      image: ghcr.io/ansible/community-ansible-dev-tools:v24.12.0
+      workingDir: $(workspaces.source.path)/source/$(params.ee-dir)
+      script: |
+        #!/bin/bash
+        set -e
+        
+        # Create the context directory if it doesn't exist
+        # mkdir -p $(workspaces.source.path)/$(params.context-dir)
+        
+        echo "Creating execution environment context for $(params.ee-dir)..."
+        ansible-builder create -f $(params.ee-config) --output-filename=Dockerfile
+        ls context        
+        echo "Context creation complete!"

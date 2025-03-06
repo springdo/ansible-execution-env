@@ -1,0 +1,50 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: git-clone
+spec:
+  workspaces:
+    - name: output
+      description: The workspace where the git repository will be cloned
+  params:
+    - name: url
+      description: Git repository URL to clone
+      type: string
+      default: "https://github.com/springdo/ansible-execution-env.git"
+    - name: revision
+      description: Git revision to checkout (branch, tag, sha, ref…)
+      type: string
+      default: "main"
+    - name: subdirectory
+      description: Subdirectory inside the output workspace where the repository will be cloned
+      type: string
+      default: "source"
+    - name: depth
+      description: Number of commits to fetch when cloning the repository
+      type: string
+      default: "1"
+  steps:
+    - name: clone
+      image: 'registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:245e5f77eef067b48f7262de04485b4ab5f195736dc128d2c574f32bb05d3b2d'
+      workingDir: $(workspaces.output.path)
+      script: |
+        #!/bin/sh
+        set -eu
+        
+        if [ -d "$(params.subdirectory)" ]; then
+          echo "Directory $(params.subdirectory) already exists, removing it..."
+          rm -rf "$(params.subdirectory)"
+        fi
+        
+        echo "Cloning $(params.url) into $(params.subdirectory)..."
+        git clone --depth=$(params.depth) --branch=$(params.revision) $(params.url) $(params.subdirectory)
+        
+        cd $(params.subdirectory)
+        RESULT_SHA="$(git rev-parse HEAD)"
+        
+        echo "Cloned repository successfully at commit: $RESULT_SHA"
+        
+        # List available execution environment directories
+        echo "Available execution environment directories:"
+        ls -la 
+        # find . -name "execution-environment.yml" -type f | grep -v "/\." | sed 's|/execution-environment.yml$||' | sed 's|^./||'
