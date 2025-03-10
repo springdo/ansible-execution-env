@@ -1,7 +1,8 @@
 ---
 version: 3
 build_arg_defaults:
-  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--pre'
+  ANSIBLE_GALAXY_CLI_COLLECTION_OPTS: '--pre --ignore-certs'
+  ANSIBLE_GALAXY_CLI_ROLE_OPTS: ' --ignore-certs'
 
 images:
   base_image:
