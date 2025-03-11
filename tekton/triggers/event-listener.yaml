@@ -1,0 +1,43 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: ansible-ee-pipeline-webhook
+  labels:
+    app: gitlab
+spec:
+  namespaceSelector: {}
+  resources: {}
+  serviceAccountName: pipeline
+  triggers:
+  - bindings:
+    - kind: TriggerBinding
+      ref: ansible-ee-pipeline-trigger-binding
+    interceptors:
+    - params:
+      - name: filter
+        value: (header.match('X-Gitlab-Event', 'Push Hook'))  
+      - name: overlays
+        value:
+        - expression: body.checkout_sha.truncate(7)
+          key: truncated-sha
+        - expression: "body.commits[0].added[0] ? body.commits[0].added[0].split('/')[0] : body.commits[0].modified[0].split('/')[0]"
+          key: ee-dir
+        - expression: "body.repository.name.lowerAscii()"
+          key: git-repo-name
+        - expression: "body.user_username.lowerAscii()"
+          key: git-user-id
+        - expression: "body.commits[body.commits.size() -1].author.email.lowerAscii()"
+          key: git-user-mail
+        - expression: "body.commits[body.commits.size() -1].message.lowerAscii()"
+          key: git-commit-msg
+        # - expression: "requestURL.parseURL().rawQuery.contains('apply-version-increase') ? requestURL.parseURL().query['apply-version-increase'] : ''"
+        #   key: apply-version-increase
+        # - expression: "requestURL.parseURL().rawQuery.contains('apply-git-tag') ? requestURL.parseURL().query['apply-git-tag'] : ''"
+        #   key: apply-git-tag
+      ref:
+        kind: ClusterInterceptor
+        name: cel
+    name: ansible-ee-pipeline-webhook-all-branches
+    template:
+      ref: ansible-ee-pipeline-trigger-template

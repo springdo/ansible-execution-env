@@ -1,0 +1,43 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: ansible-ee-pipeline-trigger-template
+spec:
+  params:
+    - name: git-url
+      description: The git url
+    - name: ee-dir
+      description: The ee dir triggering the change name
+    - name: git-revision
+      description: The short code of the commit under test
+    - name: git-user-id
+      description: The id of the user who triggered the run 
+    - name: git-commit-msg
+      description: Commit message of the user who triggered the run
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1beta1
+      kind: PipelineRun
+      metadata:
+        generateName: ansible-ee-pipeline-$(tt.params.git-user-id)-
+        labels:
+          tekton.dev/pipeline: ansible-ee-pipeline
+          ee.dir: $(tt.params.ee-dir)
+          git.short.revision: $(tt.params.git-revision)
+          git.msg: $(tt.params.git-commit-msg)
+        annotations:
+          argocd.argoproj.io/sync-options: Prune=false
+          argocd.argoproj.io/compare-options: IgnoreExtraneous
+      spec:
+        serviceAccountName: pipeline
+        pipelineRef:
+          name: ansible-ee-pipeline
+        params:
+          - name: GIT_URL
+            value: $(tt.params.git-url)
+          - name: ee-dir
+            value: $(tt.params.ee-dir)
+        workspaces:
+        - name: test-source
+          persistentVolumeClaim:
+            claimName: shared-workspace
