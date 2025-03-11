@@ -21,7 +21,8 @@ spec:
         value:
         - expression: body.checkout_sha.truncate(7)
           key: truncated-sha
-        - expression: "body.commits[0].added[0] ? body.commits[0].added[0].split('/')[0] : body.commits[0].modified[0].split('/')[0]"
+        # - expression: "body.commits[0].added[0] ? body.commits[0].added[0].split('/')[0] : body.commits[0].modified[0].split('/')[0]"
+        - expression: "body.commits[0].modified[0].split('/')[0]"
           key: ee-dir
         - expression: "body.repository.name.lowerAscii()"
           key: git-repo-name

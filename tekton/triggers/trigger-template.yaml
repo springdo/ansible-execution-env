@@ -24,7 +24,7 @@ spec:
           tekton.dev/pipeline: ansible-ee-pipeline
           ee.dir: $(tt.params.ee-dir)
           git.short.revision: $(tt.params.git-revision)
-          git.msg: $(tt.params.git-commit-msg)
+          # git.msg: $(tt.params.git-commit-msg)
         annotations:
           argocd.argoproj.io/sync-options: Prune=false
           argocd.argoproj.io/compare-options: IgnoreExtraneous
@@ -33,11 +33,11 @@ spec:
         pipelineRef:
           name: ansible-ee-pipeline
         params:
-          - name: GIT_URL
+          - name: git-url
             value: $(tt.params.git-url)
           - name: ee-dir
             value: $(tt.params.ee-dir)
         workspaces:
-        - name: test-source
+        - name: shared-workspace
           persistentVolumeClaim:
-            claimName: shared-workspace
+            claimName: ansible-ee-workspace-pvc
