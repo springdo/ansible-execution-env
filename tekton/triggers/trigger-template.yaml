@@ -24,6 +24,7 @@ spec:
           tekton.dev/pipeline: ansible-ee-pipeline
           ee.dir: $(tt.params.ee-dir)
           git.short.revision: $(tt.params.git-revision)
+          triggered: $(tt.params.git-user-id)
           # git.msg: $(tt.params.git-commit-msg)
         annotations:
           argocd.argoproj.io/sync-options: Prune=false
