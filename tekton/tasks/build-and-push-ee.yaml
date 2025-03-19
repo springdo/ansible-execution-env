@@ -29,10 +29,10 @@ spec:
       description: If true, build for internal use. If false, push to external registry
       type: string
       default: "true"
-    - name: quay-push-secret
+    - name: hub-push-secret
       description: Name of the secret for pushing to the registry
       type: string
-      default: "quay-push-secret"
+      default: "hub-push-secret"
   workspaces:
     - name: source
       description: The workspace containing the EE context
@@ -51,8 +51,8 @@ spec:
         VERSION=$(params.image-tag)
         IMAGE_REPOSITORY=$(params.registry)
         IMAGE_NAMESPACE=$(params.image-namespace)
-        QUAY_PUSH_SECRET=$(params.quay-push-secret)
-        DEV_BUILD=true
+        QUAY_PUSH_SECRET=$(params.hub-push-secret)
+        DEV_BUILD=false
 
         echo "Clean-up existing stuff"
         oc delete bc/${APP_NAME} is/${APP_NAME} || rc=$?
@@ -69,7 +69,7 @@ spec:
                        --strategy=docker \
                        --push-secret=${QUAY_PUSH_SECRET} \
                        --to-docker \
-                       --to="${IMAGE_REPOSITORY}/${IMAGE_NAMESPACE}/${APP_NAME}:${VERSION}"
+                       --to="${IMAGE_REPOSITORY}/${APP_NAME}:${VERSION}"
           oc start-build ${APP_NAME} --from-dir=${PACKAGE} --follow --wait
         fi
         
