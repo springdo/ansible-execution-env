@@ -13,6 +13,10 @@ images:
 additional_build_steps:
   prepend_base:
     - RUN echo "hello world 🗺️"
+    # example for private nexus repo for pypy
+    # - RUN $PYCMD -m pip config set global.index-url https://nexus.internal/repository/pypi-group/simple
+    # - RUN $PYCMD -m pip config set global.trusted-host nexus.internal
+    - RUN $PYCMD -m pip config list
   prepend_galaxy:
     - RUN echo "hello galaxy 🌌"
     # todo might need something like this for custom repos for galaxy 
@@ -28,10 +32,10 @@ dependencies:
     # todo - set the source url for internally hosted collections to get access to non community collections
       - name: amazon.aws 
       - name: ansible.netcommon
-      - name: ansible.posix
-      # - name: ansible.builtin
-      - name: community.vmware
-      - name: community.zabbix
+      # - name: ansible.posix
+      # # - name: ansible.builtins
+      # - name: community.vmware
+      # - name: community.zabbix
       - name: community.windows
       # - name: redhatinsights.insights
   system:
@@ -41,5 +45,5 @@ dependencies:
 
 options:
   package_manager_path: /usr/bin/microdnf # needed for rhel images
-  tags:
-    - latest
+  # tags:
+  #   - latest

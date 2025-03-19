@@ -31,19 +31,19 @@ spec:
     - name: registry
       description: Registry to push the image to
       type: string
-      default: "quay.io"
+      default: "aap-hub.internal"
     - name: image-namespace
       description: Namespace in the registry to push the image to
       type: string
-      default: "your-org"
+      default: "ee-auto-test"
     - name: is-dev-build
       description: If true, build for internal use. If false, push to external registry
       type: string
       default: "false"
-    - name: quay-push-secret
+    - name: hub-push-secret
       description: Name of the secret for pushing to the registry
       type: string
-      default: "quay-push-secret"
+      default: "hub-push-secret"
   tasks:
     - name: git-clone
       taskRef:
@@ -90,5 +90,7 @@ spec:
           value: $(params.image-namespace)
         - name: is-dev-build
           value: $(params.is-dev-build)
-        - name: quay-push-secret
-          value: $(params.quay-push-secret)
+        - name: hub-push-secret
+          value: $(params.hub-push-secret)
+        - name: ee-dir
+          value: $(params.ee-dir)
